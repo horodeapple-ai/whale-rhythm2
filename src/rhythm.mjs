@@ -86,6 +86,13 @@ export function slotHasHit(k16, thr = 3) { const c = slotChar(k16); return c.lo 
 /* ---------- 3. 段落与强度级 ---------- */
 export const GAIN = [0, 0.35, 0.7, 1.0];          // L0..L3 的幅度增益
 export const ACCENT_W = [1.0, 0.55, 0.75, 0.55];  // 小节内第 1~4 拍的权重
+/* 全局律动幅度增益（用户 2026-10-08：「动态感或者说是抖动，提高一档」）。
+ * 只作用在**元素层**：world-fx 的屏幕均衡条/灯笼光晕/中央辉光/地砖金线/光点/纸屑，
+ * 以及 rhythm-fx 的纸片 UI 弹跳（那边另有保守上限，见该文件）。
+ * **不作用于相机**（红线：相机只允许极轻微推近/暗角，cameraFx 里的系数维持原值）
+ * **也不作用于角色**（角色完全不动）。想再提一档就改这一个数——
+ * 注意 world-fx 里有几处亮度上限是按 1.4 配的，若调到 1.8 以上要一并复查那些 Math.min。 */
+export const MOTION = 1.6;
 const SEC_LEAD = 1 / FPS;                         // 段落边界提前一帧：DROP 那一帧就按新段落的强度算
 export function sectionAt(t) { let s = D.sections[0]; for (const x of D.sections) { if (t >= x.start - SEC_LEAD) s = x; else break; } return s; }
 /** 小节内第几拍（0..3），从该段第一个整拍起算 */

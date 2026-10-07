@@ -15,8 +15,16 @@
  * 全部是 t 的纯函数；只用 fillRect / 简单渐变，不用 piece()（它带纸纤维+描边+投影）。
  * 全屏叠层 ≤3 层/帧。
  * ========================================================================== */
-import {rhythm, eventsNear, loop, stagger, TAU} from './rhythm.mjs';
+import {rhythm, eventsNear, loop, stagger, TAU, MOTION} from './rhythm.mjs';
 import {hash2} from '../vendor/core/util.js';
+/* ★ 幅度总表（2026-10-08「提高一档」，全片倍率 MOTION=1.4，上限同步放宽）：
+ *   屏幕均衡条摆动 0.30+0.70 → 游程 ×1.4（摆动更大、低点更空）
+ *   灯笼光晕 a×1.4、半径 96+46 → 100+62、α 上限 0.42 → 0.58
+ *   中央辉光 a×1.4、α 上限 0.30 → 0.36（故意少放，避免整屏发白）
+ *   地砖金线 a×1.4、α 上限 0.5 → 0.62；地灯光池 ×1.4、上限 0.30 → 0.38
+ *   光点推力 60 → ×1.4、尺寸 1+0.5 → 1+0.7、闪烁 0.18+0.5 → 0.16+0.62
+ *   纸屑初速 0.7+0.5k → 0.8+0.6k、DROP 片数 48 → 56（仍 ≤60 上限）
+ * 相机与角色不在其中（红线），见 rhythm.mjs 的 MOTION 注释。 */
 
 const W = 1920, H = 1080;
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -39,7 +47,7 @@ function screenBars(g, t) {
     g.save();
     for (let j = 0; j < 3; j++) {
       const base = (w - 31 - j * 17);
-      const ww = base * (0.30 + 0.70 * clamp(lag[j]));
+      const ww = base * (0.30 + 0.70 * clamp(lag[j] * MOTION));
       const yy = y + 29 + j * 13;
       const cool = i % 2 === 1;
       g.fillStyle = cool ? '#0f6c86' : '#8a5a25';       // 槽底
@@ -56,11 +64,11 @@ function lanternGlow(g, t) {
   const R = rhythm(t);
   LANTERNS.forEach(([x, y], i) => {
     const ph = stagger(i, 0.25);
-    const a = 0.10 * R.beat * (0.7 + 0.3 * Math.cos(TAU * (loop(t, 4) + ph))) + 0.05 * R.hi + 0.16 * R.burst;
+    const a = MOTION * (0.10 * R.beat * (0.7 + 0.3 * Math.cos(TAU * (loop(t, 4) + ph))) + 0.05 * R.hi + 0.16 * R.burst);
     if (a <= 0.004) return;
-    const r0 = 30, r1 = 96 + 46 * clamp(R.burst);
+    const r0 = 30, r1 = 100 + 62 * clamp(R.burst);
     const gr = g.createRadialGradient(x, y + 22, r0, x, y + 22, r1);
-    gr.addColorStop(0, `rgba(255,236,170,${Math.min(0.42, a)})`);
+    gr.addColorStop(0, `rgba(255,236,170,${Math.min(0.58, a)})`);
     gr.addColorStop(1, 'rgba(255,222,140,0)');
     g.fillStyle = gr;
     g.fillRect(x - r1, y - r1 + 22, r1 * 2, r1 * 2);
@@ -70,11 +78,11 @@ function lanternGlow(g, t) {
 /* ===== c. 拱门中央辉光（按拍呼吸；DROP 转暖） ===== */
 function centralGlow(g, t) {
   const R = rhythm(t);
-  const a = 0.05 * R.breath + 0.075 * (0.6 * R.beat + 0.4 * R.lo) + 0.10 * R.burst;
+  const a = MOTION * (0.05 * R.breath + 0.075 * (0.6 * R.beat + 0.4 * R.lo) + 0.10 * R.burst);
   if (a <= 0.004) return;
   const warm = R.burst > 0.25;
   const gr = g.createRadialGradient(1070, 500, 40, 1070, 500, 700);
-  gr.addColorStop(0, warm ? `rgba(255,214,120,${Math.min(0.30, a)})` : `rgba(73,199,218,${Math.min(0.30, a)})`);
+  gr.addColorStop(0, warm ? `rgba(255,214,120,${Math.min(0.40, a)})` : `rgba(73,199,218,${Math.min(0.40, a)})`);
   gr.addColorStop(1, 'rgba(31,102,194,0)');
   g.fillStyle = gr;
   g.fillRect(0, 0, W, H);
@@ -84,14 +92,14 @@ function centralGlow(g, t) {
 function floorLines(g, t) {
   const R = rhythm(t);
   if (R.level < 2) return;
-  const a = 0.35 * R.beat;
+  const a = MOTION * 0.35 * R.beat;
   if (a <= 0.01) return;
   g.save();
-  g.globalAlpha = Math.min(0.5, a);
+  g.globalAlpha = Math.min(0.62, a);
   g.fillStyle = '#fff6d8';
   for (const y of FLOOR_LINES) g.fillRect(0, y, W, 1.6);
   // 台前三团地灯光池（往亮色地板上"加光"看不见，所以用有颜色的琥珀光池）
-  const fa = Math.min(0.30, 0.20 * (0.35 + 1.25 * R.beat + 0.7 * R.lo + 0.9 * R.burst));
+  const fa = Math.min(0.44, MOTION * 0.20 * (0.35 + 1.25 * R.beat + 0.7 * R.lo + 0.9 * R.burst));
   if (fa > 0.01) {
     g.globalAlpha = 1;
     [[430, 1002], [960, 1006], [1490, 1000]].forEach(([x, y], i) => {
@@ -111,7 +119,7 @@ const MOTE_TINT = ['#fff0cd', '#ffe0a0', '#ffd27a'];
 function motes(g, t) {
   const R = rhythm(t);
   const speed = (R.level >= 3 ? 1.6 : 1) * (1 - 0.5 * R.inhale);
-  const push = 60 * R.beat;
+  const push = MOTION * 60 * R.beat;
   const layers = [[22, 2, 7], [14, 3.2, 15], [8, 5, 30]];
   for (let L = 0; L < layers.length; L++) {
     const [count, sz, spd] = layers[L];
@@ -123,8 +131,8 @@ function motes(g, t) {
       const x = (hash2(seed, 23) * W + t * spd * 0.35 * speed) % W;
       const tw = 0.35 + 0.65 * Math.max(R.hi, R.beat * (0.6 + 0.4 * hash2(seed, 7)));
       g.fillStyle = MOTE_TINT[L];
-      g.globalAlpha = 0.18 + 0.5 * tw * (1 - L * 0.18);
-      const s = sz * (1 + 0.5 * R.beat);
+      g.globalAlpha = 0.16 + 0.62 * tw * (1 - L * 0.18);
+      const s = sz * (1 + 0.7 * R.beat);
       g.fillRect(x, y, s, s);
     }
   }
@@ -155,7 +163,7 @@ function eventBursts(g, t) {
   for (const { e, dt } of eventsNear(t, 1.1, 0.2)) {
     const k = e.kind === 'DROP' ? 1 : e.kind === 'hit' ? 0.5 : e.kind === 're-entry' ? 0.35 : 0;
     if (k <= 0) continue;
-    confetti(g, t, e.t, 960, 640, { n: k === 1 ? 48 : 14, seed: 17 + Math.round(e.t * 10), life: 1.1, power: 0.7 + 0.5 * k });
+    confetti(g, t, e.t, 960, 640, { n: k === 1 ? 56 : 16, seed: 17 + Math.round(e.t * 10), life: 1.1, power: 0.8 + 0.6 * k });
   }
 }
 

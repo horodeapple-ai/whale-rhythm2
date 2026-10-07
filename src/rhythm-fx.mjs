@@ -21,8 +21,12 @@ import {playbackTime} from './music-clock.mjs';
 const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const smooth = (v) => { v = clamp(v); return v * v * (3 - 2 * v); };
 
-/** 各强度级的缩放幅度 */
-export const POP_AMP = [0, 0.006, 0.016, 0.028];
+/* 各强度级的缩放幅度
+ * 2026-10-08「提高一档」：0.006/0.016/0.028 → 0.009/0.024/0.038（≈+36%）。
+ * 这里 150+ 处原语里有大量带文字的元素（窗口/卡片/请求单），逐拍幅度越大字边缘越软；
+ * 现在 L3 = 3.8%（原注建议 ≤3%，用户要求更活所以放到 3.8%）——若看字发虚就往下调这一行。
+ * 要更猛的话先加这里，world-fx 那边还有 MOTION=1.6 可加。 */
+export const POP_AMP = [0, 0.009, 0.024, 0.038];
 
 /** 交错行波包络：x 位置决定延迟（0..0.5 拍），key 再错开最多 3/16 拍 */
 export function staggerEnv(x, key = 0) {
@@ -41,16 +45,16 @@ export function popScale(x, key = 0) {
   if (!Number.isFinite(t)) return 1;
   const R = rhythm(t);
   if (R.level === 0) return 1;
-  return 1 + POP_AMP[R.level] * (1 - 0.7 * R.inhale) * staggerEnv(x, key) + 0.05 * R.burst;
+  return 1 + POP_AMP[R.level] * (1 - 0.7 * R.inhale) * staggerEnv(x, key) + 0.075 * R.burst;
 }
 
-/** 平台纵向弹：返回 y 偏移（正=下沉），≤4px */
+/** 平台纵向弹：返回 y 偏移（正=下沉），≤6px（提高一档后，原 4px） */
 export function stageBounce(x, key = 0) {
   const t = playbackTime();
   if (!Number.isFinite(t)) return 0;
   const R = rhythm(t);
   if (R.level === 0) return 0;
-  return 4 * staggerEnv(x, key) * R.gain;
+  return 6 * staggerEnv(x, key) * R.gain;
 }
 
 /** 以 (cx,cy) 为中心、按 popScale 缩放地画一个 UI 元素 */
