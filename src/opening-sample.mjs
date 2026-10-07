@@ -59,10 +59,15 @@ function request(g,x,y,w,h,title,body,rotation=0){at(g,M(tr(x,y),rt(rotation)),(
  *   · 分界点 = A-4「接单变装」收到"请变成猫娘！"委托 → A-5 设计 → A-6「猫耳鲸尾」变身完成；
  *     所以变身前的两句话（A-2「诶？！」、A-3「我才不是大肥鱼！」）不加后缀。
  *   · 已经带「喵」的句子（喵？/ 好啦，开工喵！/ 坐稳喵～/ 猫耳鲸尾，接单喵！）不重复加。
- *   · 全片 21 句台词 → 15 句加后缀、6 句不动。核对：node tools/check_speech.mjs */
+ *   · 「又是大肥鱼！」是**别人**说的（D-D18：气泡尾巴指向右侧三个子代理，而且是第三人称说她），
+ *     主角在这句之后才接「才、才不是……」（那句加）——用户 2026-10-08 看图确认后要求去掉。
+ *   · 全片 21 句台词 → 14 句加后缀、7 句不动。核对：node tools/check_speech.mjs */
 const CAT_TAIL='喵~';
-const PRE_CAT=new Set(['诶？！','我才不是大肥鱼！']);
-export function catSpeak(s){return (s.includes('喵')||PRE_CAT.has(s))?s:s+CAT_TAIL;}
+const NO_CAT_TAIL=new Set([
+  '诶？！','我才不是大肥鱼！',   // 变成猫娘之前
+  '又是大肥鱼！',                // 不是主角说的（子代理/围观者）
+]);
+export function catSpeak(s){return (s.includes('喵')||NO_CAT_TAIL.has(s))?s:s+CAT_TAIL;}
 function speech(g,s,x,y,w=440,h=120,rotation=0){const say=catSpeak(s);at(g,M(tr(x,y),rt(rotation)),()=>{card(g,0,0,w,h,C.white);polygon(g,[[42,h-2],[59,h+25],[90,h-1]],C.white,{lift:2,r:45,c:[63,h+7],shade:.05});txt(g,say,w/2,h*.51,Math.min(54,w/(say.length+.5)),C.navy,'center');});}
 function bowl(g,b){at(g,M(tr(b.x,b.y),M(rt(b.rot||0),sc(b.s,b.s))),()=>{const p=smooth([[-64,0],[-55,39],[-32,49],[32,49],[56,31],[64,0]],{tension:.16});piece(g,p,'#358fae',{lift:4,r:85,c:[0,24],shade:.15,rimW:2});polygon(g,[[-58,4],[-30,8],[-18,44],[-39,42]],'#b1f0ef',{lift:.65,r:60,c:[-39,20],shade:.08});polygon(g,[[18,6],[49,4],[46,33],[32,43]],'#126985',{lift:.6,r:55,c:[36,22],shade:.1});piece(g,ell(0,0,66,20),'#a4e2dc',{lift:2,r:75,c:[0,0],shade:.13});piece(g,smooth([[-57,-2],[-41,-23],[-11,-34],[25,-28],[55,-6]],{tension:.2}),C.white,{lift:2,r:68,c:[0,-14],shade:.09});for(let i=0;i<28;i++){const x=-45+(i*19)%91,y=-4-(i*13)%23;if((x/52)**2+((y+2)/30)**2<1)grain(g,x,y,.55,i*.45);}stroke(g,curve([[-61,1],[-42,13],[0,19],[42,13],[61,1]]),'#edf0df',3,.9);});}
 function grain(g,x,y,s=1,rot=0){at(g,M(tr(x,y),M(rt(rot),sc(s,s))),()=>piece(g,blob(0,0,3.4,7,{seed:4,amp:.04,n:16}),C.white,{lift:.7,r:10,c:[0,0],shade:.12,rimW:.4,underW:.5}));}
