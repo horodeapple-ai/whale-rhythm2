@@ -1,0 +1,10 @@
+# 统一换行：仓库里一律 LF（工程里有"逐字节相同"的断言，别让 checkout 改写换行）
+# .cmd/.bat 例外：cmd 需要 CRLF 才稳
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.ttf binary
+*.woff2 binary
+*.m4a binary
+*.html binary

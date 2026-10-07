@@ -1,0 +1,14 @@
+{
+  "name": "whale-original-blue-gold-refined-film",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Original blue-gold refined full film, restored beat motion and three subagent workflow",
+  "scripts": {
+    "render": "node tools/render_film.cjs",
+    "build": "python3 tools/build_html.py",
+    "verify": "node tools/verify_film.cjs"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "0.1.100"
+  }
+}

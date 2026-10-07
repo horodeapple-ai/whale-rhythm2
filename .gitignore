@@ -1,0 +1,24 @@
+# ---- 依赖 ----
+node_modules/
+
+# ---- 构建产物（可由 tools/build_html.py 重新生成）----
+output/
+
+# ---- 验收/调试中间物：qa 里是抽帧对比、频谱、用户截图等大量 PNG ----
+qa/
+
+# ---- 工作目录：音频分析中间物(wav/m4s)、改前改后对照 mp4、B站下载、生成的歌词数据等 ----
+# 只保留交接文档（新会话靠它接上）
+out/*
+!out/HANDOFF-*.md
+
+# ---- 第三方素材：歌曲音轨不入库（版权属原作者，见 CREDITS.md）----
+# 本地使用：把《Let Me Go（共创版）》音频放到 assets/song.m4a 即可；
+# 若确实要在私有仓库里带上它：删掉下面这行（或 git add -f assets/song.m4a）
+assets/song.m4a
+
+# ---- 系统/编辑器杂物 ----
+Thumbs.db
+desktop.ini
+.DS_Store
+*.log
